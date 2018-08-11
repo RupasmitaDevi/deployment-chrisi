@@ -1,0 +1,57 @@
+apiVersion: apps/v1 
+kind: Deployment 
+metadata:
+  name: vapp-deploy
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  labels:
+    app: vapp
+  namespace: vapp-ns
+spec:
+  replicas: 3
+  selector:
+    matchLabels:  
+      app: vapp
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1 
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubernetes.io/change-cause: "v1.0.0 first deployment"
+      labels: 
+        app: vapp
+        env: prod 
+    spec:
+      containers:
+        - image: ichandan/vapp:v1.0.0
+          name: vapp
+          imagePullPolicy: Always 
+          restartPolicy: Always
+          ports:
+            - containerPort: 5000
+              name: flask-port
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: flask-port 
+            initialDelaySeconds: 5
+            periodSeconds: 20  # default 10s   
+            timeoutSeconds: 2 # default is 1s
+            successThreshold: 1
+            failureThreshold: 5 # defaults to 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: flask-port
+            initialDelaySeconds: 5
+            periodSeconds: 20  # default 10s   
+            timeoutSeconds: 2 # default is 1s
+            successThreshold: 1
+            failureThreshold: 5 # defaults to 3
+
+
+
+    
